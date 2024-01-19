@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="nodes" nsURI="http://nodes.antifragile.eres.lnu.se" nsPrefix="nodes">
+  <eClassifiers xsi:type="ecore:EClass" name="NetworkedSystem">
+    <eOperations name="addNode">
+      <eAnnotations source="http://www.eclipse.org/emf/2002/GenModel">
+        <details key="body" value="getNodes().add(n);"/>
+      </eAnnotations>
+      <eParameters name="n" eType="#//Node"/>
+    </eOperations>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="nodes" upperBound="-1"
+        eType="#//Node" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="vectors" lowerBound="1"
+        eType="#//AttackVectors" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="sofware" upperBound="-1"
+        eType="#//SoftwareType" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="hardware" upperBound="-1"
+        eType="#//HardwareType" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Node">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="neighbors" upperBound="-1"
+        eType="#//Node"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="nodeID" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="isInfected" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="meanHealingT" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EDouble"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="secComm" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean" defaultValueLiteral="false"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="installedSoftware" lowerBound="1"
+        eType="#//SoftwareType"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="hardware" upperBound="-1"
+        eType="#//HardwareType"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="AttackVectors">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="vulnerabilities" upperBound="-1"
+        eType="#//VulnerabilityExploit" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="VulnerabilityExploit">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="vulnerabilityId" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="probAttack" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EDouble" defaultValueLiteral="0.0"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="vulnerableSoftware" lowerBound="1"
+        eType="#//SoftwareType"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SoftwareType">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="softwareId" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString" iD="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="HardwareType">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="hardwareID" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString" iD="true"/>
+  </eClassifiers>
+</ecore:EPackage>

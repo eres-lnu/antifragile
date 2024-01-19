@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+
+<!--
+-->
+
+<plugin>
+
+   <extension point="org.eclipse.emf.ecore.generated_package">
+      <!-- @generated nodes-attack -->
+      <package
+            uri="http://nodes.antifragile.eres.lnu.se"
+            class="model.nodes.NodesPackage"
+            genModel="src/main/resources/model/nodes-attack.genmodel"/>
+   </extension>
+
+</plugin>
