@@ -1,15 +1,18 @@
-package simple;
+package simple.data;
 
 import java.util.ArrayList;
 import java.util.Random;
 
+/**
+ * 
+ */
 public class Network {
 
 //An array for the types and an array for the nodes
 	private ArrayList<Integer>[] neighbors;
 	private int[] type;
 	private boolean[] isInfected;
-	private double meanHealingT; // all nodes have the same healtime
+	private double meanHealingT; // all nodes have the same healtime TODO: make it node type specific, or node specific?
 
 	private VulnerabilityExploit[] exploits;
 
@@ -130,6 +133,71 @@ public class Network {
 			exploits[i] = new VulnerabilityExploit(i, avgProbAttack, i);
 		}
 	}
+	
+	
+	//To speedup simulations, we reuse the same array;
+	private boolean[] infectedAtCurrentTime;
+	/**
+	 * This method propagates the infection to the neighbors of the same type;
+	 */
+	public void propagateInfections() {
+		if(infectedAtCurrentTime==null) {
+			infectedAtCurrentTime = new boolean[isInfected.length];
+		}
+		for(int n=0; n<neighbors.length; n++) {
+			if(isInfected[n]) {
+				//Add to the infected at current time
+				infectedAtCurrentTime[n]=true;
+				//Propagate to neighbors of same type
+				for(Integer neigh : neighbors[n]) {
+					if(type[n]==type[neigh]) {
+						infectedAtCurrentTime[neigh]=true;
+					}
+				}
+			}
+		}
+		swapArraysAndSetToFalse();
+	}
+	
+	/**
+	 * This method creates a new outbreak in each node according to the probability of attack;
+	 */
+	public void createOutbreaks() {
+		for(int n=0; n<isInfected.length; n++) {
+			//If the node is not already infected
+			if (!isInfected[n]){
+				if(r.nextDouble()<exploits[type[n]].getProbAttack()) {
+					isInfected[n]=true;
+				}
+			}
+		}
+	}
+	
+	/**
+	 * This method heals infected node according to the probability of healing;
+	 */
+	public void healNodes() {
+		double healingProbability = (meanHealingT-1.0)/meanHealingT;
+		for(int n=0; n<isInfected.length; n++) {
+			//If the node is already infected
+			if (isInfected[n]){
+				if(r.nextDouble()>healingProbability) {
+					isInfected[n]=false;
+				}
+			}
+		}
+	}
+	
+	
+	private void swapArraysAndSetToFalse() {
+		boolean[] aux = isInfected;
+		isInfected=infectedAtCurrentTime;
+		infectedAtCurrentTime=aux;
+		for(int i=0 ; i<infectedAtCurrentTime.length; i++) {
+			infectedAtCurrentTime[i]=false;
+		}
+		
+	}
 
 	@Override
 	public String toString() {
@@ -146,5 +214,19 @@ public class Network {
 		}
 	return result;
 	}
+
+	public double calculateProportionInfected() {
+		double numInfected=0.0;
+		for(int i=0; i<isInfected.length; i++) {
+			if(isInfected[i]) {
+				numInfected++;
+			}
+		}
+		return numInfected/((double) isInfected.length);
+	}
+
+
+
+
 	
 }
