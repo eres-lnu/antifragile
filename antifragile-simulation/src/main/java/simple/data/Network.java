@@ -19,6 +19,14 @@ public class Network {
 	private Random r = new Random();
 
 //Creates a single vulnerability for each type of sofware
+	/**
+	 * @param nnodes number of nodes
+	 * @param nsoftware number of types of software
+	 * @param avgNeighbors average number of neighbors of each node
+	 * @param avgProbAttack average probability of attack at a given time
+	 * @param meanHealT average healing time
+	 * @param filename
+	 */
 	public void createSystem(int nnodes, int nsoftware, double avgNeighbors, double avgProbAttack, double meanHealT,
 			String filename) {
 
