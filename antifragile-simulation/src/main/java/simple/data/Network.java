@@ -182,6 +182,10 @@ public class Network {
 			//If the node is already infected
 			if (isInfected[n]){
 				if(r.nextDouble()>healingProbability) {
+					//Here it is higher than because the larger the probability calculated 
+					//means that the larger the average time to realize that a node should 
+					//heal and, therefore, the lower the chances that we heal it at the 
+					//current moment
 					isInfected[n]=false;
 				}
 			}
@@ -223,6 +227,17 @@ public class Network {
 			}
 		}
 		return numInfected/((double) isInfected.length);
+	}
+	
+	public double calculateProportionHealthy() {
+		return 1.0-calculateProportionInfected();
+	}
+
+	public void resetInfected() {
+		for(int i=0; i<isInfected.length; i++) {
+			isInfected[i]=false;
+		}
+		
 	}
 
 
