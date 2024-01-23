@@ -12,7 +12,8 @@ public class Network {
 	private ArrayList<Integer>[] neighbors;
 	private int[] type;
 	private boolean[] isInfected;
-	private double meanHealingT; // all nodes have the same healtime TODO: make it node type specific, or node specific?
+	private double meanHealingT; // all nodes have the same healtime TODO: make it node type specific, or node
+									// specific?
 
 	private VulnerabilityExploit[] exploits;
 
@@ -20,17 +21,17 @@ public class Network {
 
 //Creates a single vulnerability for each type of sofware
 	/**
-	 * @param nnodes number of nodes
-	 * @param nsoftware number of types of software
-	 * @param avgNeighbors average number of neighbors of each node
+	 * @param nnodes        number of nodes
+	 * @param nsoftware     number of types of software
+	 * @param avgNeighbors  average number of neighbors of each node
 	 * @param avgProbAttack average probability of attack at a given time
-	 * @param meanHealT average healing time
+	 * @param meanHealT     average healing time
 	 * @param filename
 	 */
+	@SuppressWarnings("unchecked")
 	public void createSystem(int nnodes, int nsoftware, double avgNeighbors, double avgProbAttack, double meanHealT,
 			String filename) {
 
-	
 		exploits = new VulnerabilityExploit[nsoftware];
 		type = new int[nnodes];
 		neighbors = new ArrayList[nnodes];
@@ -67,20 +68,23 @@ public class Network {
 			int neigh;
 			if (!allPreviousAreNeighbors(i)) {
 				neigh = r.nextInt(i); // Creates a random between 0 (incl) and i (excl)
-				int count = 0;
-				int indexSearchNodes = 0;
+				int count = -1; // TODO: Check if this is 0 or -1
+				int indexSearchNodes = -1;
 
 				// find the neighbor. Not the "neigh" because it may be already a neighbor
 				while (count < neigh) {
+					indexSearchNodes = (indexSearchNodes + 1) % i;
 					if (!isAlreadyNeighbor(indexSearchNodes, i)) {
 						count++;
 					}
-					indexSearchNodes = (indexSearchNodes + 1) % i;
+
 				}
+				System.out.println("Creating neighbor point 1 - Between nodes" + i + "-" + indexSearchNodes);
 				addNeighbor(indexSearchNodes, i);
 			} else {// create the first neighbor between i and nnodes
 				if (i < nnodes - 1) {
 					neigh = r.nextInt(nnodes - 1 - i); // TODO: this may be called with a 0 if we are in the last node
+					System.out.println("Creating neighbor point 2  - Between nodes" + i + "-" + (i + 1 + neigh));
 					addNeighbor(i + 1 + neigh, i);
 				}
 			}
@@ -89,20 +93,23 @@ public class Network {
 			while (r.nextDouble() < probabilityAnotherNeigh) {
 				neigh = r.nextInt(nnodes - 1);
 				addNeighbor(searchIthNodeNotNeighborYet(neigh, i, nnodes), i);
+
 			}
 		}
 
 	}
 
 	private int searchIthNodeNotNeighborYet(int ithNotNeighbor, int nodeIndex, int nnodes) {
-		int count = 0;
-		int indexSearched = 0;
+		int count = -1; // TODO: Check if this is 0 or -1
+		int indexSearched = -1;
 		while (count < ithNotNeighbor) {
+			indexSearched = (indexSearched + 1) % nnodes;
 			if (!isAlreadyNeighbor(indexSearched, nodeIndex)) {
 				count++;
 			}
-			indexSearched = (indexSearched + 1) % nnodes;
+
 		}
+		System.out.println("Creating neighbor point  3 - Between nodes" + nodeIndex + "-" + indexSearched);
 		return indexSearched;
 	}
 
@@ -122,9 +129,15 @@ public class Network {
 		return neighbors[node].contains(neigh);
 	}
 
-	private void addNeighbor(int j, int i) {
+	public void addNeighbor(int j, int i) {
 		neighbors[j].add(i);
 		neighbors[i].add(j);
+
+	}
+
+	public void removeNeighbor(int j, int i) {
+		neighbors[j].remove(neighbors[j].indexOf(i));
+		neighbors[i].remove(neighbors[i].indexOf(j));
 
 	}
 
@@ -141,115 +154,200 @@ public class Network {
 			exploits[i] = new VulnerabilityExploit(i, avgProbAttack, i);
 		}
 	}
-	
-	
-	//To speedup simulations, we reuse the same array;
+
+	// To speedup simulations, we reuse the same array;
 	private boolean[] infectedAtCurrentTime;
+
 	/**
 	 * This method propagates the infection to the neighbors of the same type;
 	 */
 	public void propagateInfections() {
-		if(infectedAtCurrentTime==null) {
+		if (infectedAtCurrentTime == null) {
 			infectedAtCurrentTime = new boolean[isInfected.length];
 		}
-		for(int n=0; n<neighbors.length; n++) {
-			if(isInfected[n]) {
-				//Add to the infected at current time
-				infectedAtCurrentTime[n]=true;
-				//Propagate to neighbors of same type
-				for(Integer neigh : neighbors[n]) {
-					if(type[n]==type[neigh]) {
-						infectedAtCurrentTime[neigh]=true;
+		for (int n = 0; n < neighbors.length; n++) {
+			if (isInfected[n]) {
+				// Add to the infected at current time
+				infectedAtCurrentTime[n] = true;
+				// Propagate to neighbors of same type
+				for (Integer neigh : neighbors[n]) {
+					if (type[n] == type[neigh]) {
+						infectedAtCurrentTime[neigh] = true;
 					}
 				}
 			}
 		}
 		swapArraysAndSetToFalse();
 	}
-	
+
 	/**
-	 * This method creates a new outbreak in each node according to the probability of attack;
+	 * This method creates a new outbreak in each node according to the probability
+	 * of attack;
 	 */
 	public void createOutbreaks() {
-		for(int n=0; n<isInfected.length; n++) {
-			//If the node is not already infected
-			if (!isInfected[n]){
-				if(r.nextDouble()<exploits[type[n]].getProbAttack()) {
-					isInfected[n]=true;
+		for (int n = 0; n < isInfected.length; n++) {
+			// If the node is not already infected
+			if (!isInfected[n]) {
+				if (r.nextDouble() < exploits[type[n]].getProbAttack()) {
+					isInfected[n] = true;
 				}
 			}
 		}
 	}
-	
+
 	/**
 	 * This method heals infected node according to the probability of healing;
 	 */
 	public void healNodes() {
-		double healingProbability = (meanHealingT-1.0)/meanHealingT;
-		for(int n=0; n<isInfected.length; n++) {
-			//If the node is already infected
-			if (isInfected[n]){
-				if(r.nextDouble()>healingProbability) {
-					//Here it is higher than because the larger the probability calculated 
-					//means that the larger the average time to realize that a node should 
-					//heal and, therefore, the lower the chances that we heal it at the 
-					//current moment
-					isInfected[n]=false;
+		double healingProbability = (meanHealingT - 1.0) / meanHealingT;
+		for (int n = 0; n < isInfected.length; n++) {
+			// If the node is already infected
+			if (isInfected[n]) {
+				if (r.nextDouble() > healingProbability) {
+					// Here it is higher than because the larger the probability calculated
+					// means that the larger the average time to realize that a node should
+					// heal and, therefore, the lower the chances that we heal it at the
+					// current moment
+					isInfected[n] = false;
 				}
 			}
 		}
 	}
-	
-	
+
 	private void swapArraysAndSetToFalse() {
 		boolean[] aux = isInfected;
-		isInfected=infectedAtCurrentTime;
-		infectedAtCurrentTime=aux;
-		for(int i=0 ; i<infectedAtCurrentTime.length; i++) {
-			infectedAtCurrentTime[i]=false;
+		isInfected = infectedAtCurrentTime;
+		infectedAtCurrentTime = aux;
+		for (int i = 0; i < infectedAtCurrentTime.length; i++) {
+			infectedAtCurrentTime[i] = false;
 		}
-		
+
 	}
 
 	@Override
 	public String toString() {
 		String result = "";
 
-		for (int i=0; i<neighbors.length; i++) {
-			result +="Node " + i+"- Neighbors: ";
-			for(Integer n : neighbors[i]) {
-				result+=n+", ";
+		for (int i = 0; i < neighbors.length; i++) {
+			result += "Node " + i + "- Neighbors: ";
+			for (Integer n : neighbors[i]) {
+				result += n + ", ";
 			}
-			result+=System.getProperty("line.separator") ;
-		
-					
+			result += System.getProperty("line.separator");
+
 		}
-	return result;
+		return result;
 	}
 
 	public double calculateProportionInfected() {
-		double numInfected=0.0;
-		for(int i=0; i<isInfected.length; i++) {
-			if(isInfected[i]) {
+		double numInfected = 0.0;
+		for (int i = 0; i < isInfected.length; i++) {
+			if (isInfected[i]) {
 				numInfected++;
 			}
 		}
-		return numInfected/((double) isInfected.length);
+		return numInfected / ((double) isInfected.length);
 	}
-	
+
 	public double calculateProportionHealthy() {
-		return 1.0-calculateProportionInfected();
+		return 1.0 - calculateProportionInfected();
 	}
 
 	public void resetInfected() {
-		for(int i=0; i<isInfected.length; i++) {
-			isInfected[i]=false;
+		for (int i = 0; i < isInfected.length; i++) {
+			isInfected[i] = false;
+		}
+
+	}
+
+	public int getNodeWithMostNeighbors() {
+		int maxNeighbors = 0;
+		int maxNeighborsIndex = 0;
+		for (int i = 0; i < neighbors.length; i++) {
+			if (numberOfNeighbors(i) > maxNeighbors) {
+				maxNeighbors = numberOfNeighbors(i);
+				maxNeighborsIndex = i;
+			}
+		}
+		return maxNeighborsIndex;
+	}
+	
+
+	public int numberOfNeighbors(int node) {
+		return neighbors[node].size();
+	}
+
+	public ArrayList<Integer> getNeighbors(int node) {
+		return neighbors[node];
+	}
+
+	public int typeOf(int node) {
+		return type[node];
+	}
+
+	public boolean isConnected() {
+
+		boolean[] visited = new boolean[neighbors.length];
+
+		// depth-first-search marking visited nodes
+		dfs(0, visited);
+
+
+		for (int i = 0; i < visited.length; i++) {
+			if (!visited[i]) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public void dfs(int origin, boolean[] visited) {
+
+		visited[origin] = true;
+
+		for (int i = 0; i < neighbors[origin].size(); i++) {
+
+			int neighbor = neighbors[origin].get(i);
+
+			if (!visited[neighbor]) {
+				dfs(neighbor, visited);
+			}
+		}
+	}
+
+	public int[] getNodesSortedByNeighborNumber() {
+		int[] nodes = new int[neighbors.length];
+		for(int i=0; i< nodes.length ; i++) {
+			nodes[i]=i;
+		}
+		sortByNeighbors(nodes);
+		return nodes;
+	}
+
+	private void sortByNeighbors(int[] nodes) {
+		//Simple quadratic sorting
+		for(int i=0; i<nodes.length; i++) {	
+				int auxPosition = getMaxPosition(nodes, i); //get the position with maximum value starting in j position
+				int auxValue = nodes[auxPosition];
+				nodes[auxPosition]=nodes[i];
+				nodes[i]=auxValue;
+				
+			
 		}
 		
 	}
 
+	private int getMaxPosition(int[] nodes, int i) {
+		int maxValue=0;
+		int maxPosition=0;
+		for(int j=i; j<nodes.length; j++) {
+			if(numberOfNeighbors(nodes[j])>maxValue) {
+				maxValue=numberOfNeighbors(nodes[j]);
+				maxPosition=j;
+			}
+		}
+		return maxPosition;
+	}
 
-
-
-	
 }

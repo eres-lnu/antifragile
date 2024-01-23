@@ -7,7 +7,7 @@ import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.inference.TTest;
 
 import simple.data.Network;
-
+import simple.exceptions.NoSatisfyingImprovementFoundException;
 import simple.simulation.Simulator;
 
 public class Learner {
@@ -86,6 +86,9 @@ public class Learner {
 			System.out.println(
 					"Calculated significance is (small values is that it is clear that is on one side or other): "
 							+ calcSignificance);
+			System.out.println(
+					"The average of the average values is: "
+							+ calculatorMean.evaluate(auxAvg, 0, auxAvg.length)+System.getProperty("line.separator"));
 		}
 		if (undecided) {
 			neededReconfiguration = true;// We couldn't reject the H0. The loop left because it reached the MAX
@@ -96,17 +99,53 @@ public class Learner {
 
 	}
 
-	public void improve(Network n) {
-		while(isNeededReconfiguration()) {
-			//get random node
-			//for each neighbor
-				//if is same type, keeps more than two links, and does not break the connection
-				//remove neighbor (also from the other!)
-				//calculate probability and maybe it will not be needed to remove more
-			
-			//If it was not possible to remove anything and still does not meet requirements --> failed improvement
+	public void improve(Network n) throws NoSatisfyingImprovementFoundException {
+
+		// get a list with the nodes sorted by the number of neighbors, from max to min.
+		int[] nodesToPruneSorted = n.getNodesSortedByNeighborNumber();
+		int indexNodePrune = 0;
+		while (isNeededReconfiguration() && indexNodePrune < nodesToPruneSorted.length) {
+			// get node with larger number of neighbors
+			int nodeToPrune = nodesToPruneSorted[indexNodePrune];
+			improveSingleNode(n, nodeToPrune);
+			indexNodePrune++;
 		}
-		
+
+	}
+
+	private void improveSingleNode(Network n, int nodeToPrune) {
+
+		int indexNeighborToCheck = 0;
+		int[] neighborsToCheck = ArrayUtils
+				.toPrimitive(n.getNeighbors(nodeToPrune).toArray(new Integer[n.getNeighbors(nodeToPrune).size()]));
+		while (isNeededReconfiguration() && // Maybe we can stop improving now
+				(n.numberOfNeighbors(nodeToPrune) > 2) && // We do not leave any node with only one link
+				indexNeighborToCheck < neighborsToCheck.length) { // We have not checked all current neighbors yet
+			int neighborToCheck = neighborsToCheck[indexNeighborToCheck];
+
+			if (n.typeOf(neighborToCheck) == n.typeOf(nodeToPrune)) {
+				// if is same type, keeps more than two links (for both), and does not break the
+				// connection
+				// remove neighbor (also from the other!)
+				if (n.numberOfNeighbors(neighborToCheck) > 2) { // We do not break the rule of the two links on the
+																// other side
+					// Implemented as: remove neighbor (also from the other) -->
+					// --> check connected graph --> add neighbor (also from the other) if it was
+					// disconnected
+					n.removeNeighbor(nodeToPrune, neighborToCheck);
+					if (n.isConnected()) {
+						learnProportionHealthy(n);
+					} else {
+						n.addNeighbor(nodeToPrune, neighborToCheck);
+					}
+
+				}
+
+			}
+
+			indexNeighborToCheck++;
+		}
+
 	}
 
 }

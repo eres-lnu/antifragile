@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import simple.data.Network;
+import simple.exceptions.NoSatisfyingImprovementFoundException;
 
 class TestLearner {
 
@@ -27,10 +28,15 @@ class TestLearner {
 	
 	@Test
 	void testNeedsReconfigurationTooManyNeighbors() {
-		n.createSystem(100, 10, 5, 0.005, 2.5, "file");	//With so many types of software, it's more difficult to propagate
+		n.createSystem(100, 10, 20, 0.005, 2.5, "file");	//With so many types of software, it's more difficult to propagate
 		System.out.println("TEST end: average proportion of healthy nodes is: " + l.learnProportionHealthy(n));
 		if(l.isNeededReconfiguration()) {
-			l.improve(n);
+			try {
+				l.improve(n);
+			} catch (NoSatisfyingImprovementFoundException e) {
+				System.out.println("Impossible to improve");
+				e.printStackTrace();
+			}
 		}
 	}
 	

@@ -45,6 +45,7 @@ class TestNetwork {
 		double[] results = s.simulate(l, 100);
 		System.out.println(Arrays.toString(results));
 		s.saveFile("simulate10plotting");
+		(new Scanner(System.in)).nextLine();
 
 	}
 
