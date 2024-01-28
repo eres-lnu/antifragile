@@ -29,10 +29,13 @@ class TestLearner {
 	@Test
 	void testNeedsReconfigurationTooManyNeighbors() {
 		n.createSystem(100, 10, 20, 0.005, 2.5, "file");	//With so many types of software, it's more difficult to propagate
-		System.out.println("TEST end: average proportion of healthy nodes is: " + l.learnProportionHealthy(n));
+		int initialNumberOfTotalNeighbors = n.countAllNeighbors();
+		System.out.println("Average proportion of healthy nodes is: " + l.learnProportionHealthy(n));
 		if(l.isNeededReconfiguration()) {
 			try {
 				l.improve(n);
+				System.out.println(n.toString());
+				System.out.println("Total number of edges was: " +initialNumberOfTotalNeighbors + " and now is: " + n.countAllNeighbors());
 			} catch (NoSatisfyingImprovementFoundException e) {
 				System.out.println("Impossible to improve");
 				e.printStackTrace();

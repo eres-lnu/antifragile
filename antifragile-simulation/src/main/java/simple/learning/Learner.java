@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.inference.TTest;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import simple.data.Network;
 import simple.exceptions.NoSatisfyingImprovementFoundException;
@@ -18,14 +20,21 @@ public class Learner {
 	// We want to be confident that the average proportion of healthy nodes is above
 	// 95%
 	private static final double HEALTH_REQUIREMENT_PROPORTION = 0.95;
-	private static final int BATCH_REPS = 30;
+	private int BATCH_REPS = 10;
 	private int timeHorizon;
 	private static final int MAX_REPS = 300;
 	private double pValue;
 
+	 protected static final Logger log = LogManager.getLogger();
+	
 	public Learner(int timeHorizon, double pValue) {
+		this(timeHorizon, 10, pValue);
+	}
+
+	public Learner(int timeHorizon, int batch_reps, double pValue) {
 		super();
 		this.timeHorizon = timeHorizon;
+		this.BATCH_REPS=batch_reps;
 		this.pValue = pValue;
 	}
 
@@ -51,8 +60,7 @@ public class Learner {
 				double[] results = s.simulate(system, timeHorizon);
 				averages.add(calculatorMean.evaluate(results, 0, results.length));
 				// Plotter.PlotResults(results);
-				System.out
-						.println("Simulation number " + reps + " average number of healthy is: " + averages.get(reps));
+				log.info("Simulation number " + reps + " average number of healthy is: " + averages.get(reps));
 				reps++;
 			}
 
@@ -81,14 +89,15 @@ public class Learner {
 					neededReconfiguration = false;
 
 				}
+				else {
+					log.warn("Reiterating the batch because it was not lower than the average and not enough confidence that it is larger");
+				}
 			}
 			double calcSignificance = ttest.tTest(HEALTH_REQUIREMENT_PROPORTION, auxAvg) / 2.0;
-			System.out.println(
-					"Calculated significance is (small values is that it is clear that is on one side or other): "
-							+ calcSignificance);
-			System.out.println(
-					"The average of the average values is: "
-							+ calculatorMean.evaluate(auxAvg, 0, auxAvg.length)+System.getProperty("line.separator"));
+
+			log.info("Calculated significance is (small values is that it is clear that is on one side or other): {}", calcSignificance);
+			log.info("The average of the average values is: {} {}", calculatorMean.evaluate(auxAvg, 0, auxAvg.length), System.getProperty("line.separator"));
+
 		}
 		if (undecided) {
 			neededReconfiguration = true;// We couldn't reject the H0. The loop left because it reached the MAX

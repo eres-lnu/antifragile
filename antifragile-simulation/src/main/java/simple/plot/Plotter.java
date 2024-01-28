@@ -1,7 +1,6 @@
 package simple.plot;
 
 import org.jfree.chart.ChartPanel;
-import org.jfree.chart.ChartUtilities;
 
 import java.awt.Graphics;
 import java.awt.Rectangle;

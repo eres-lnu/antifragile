@@ -3,6 +3,9 @@ package simple.data;
 import java.util.ArrayList;
 import java.util.Random;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * 
  */
@@ -19,6 +22,8 @@ public class Network {
 
 	private Random r = new Random();
 
+	 protected static final Logger log = LogManager.getLogger(Network.class);
+	
 //Creates a single vulnerability for each type of sofware
 	/**
 	 * @param nnodes        number of nodes
@@ -42,6 +47,7 @@ public class Network {
 		fillType(nnodes, nsoftware);
 		fillNeighbor(nnodes, avgNeighbors);
 		fillInfected(nnodes);
+		infectedAtCurrentTime = new boolean[isInfected.length];
 
 	}
 
@@ -79,12 +85,13 @@ public class Network {
 					}
 
 				}
-				System.out.println("Creating neighbor point 1 - Between nodes" + i + "-" + indexSearchNodes);
+				log.debug("Creating neighbor point 1 - Between nodes {}-{}", i , indexSearchNodes);
+				//System.out.println("Creating neighbor point 1 - Between nodes" + i + "-" + indexSearchNodes);
 				addNeighbor(indexSearchNodes, i);
 			} else {// create the first neighbor between i and nnodes
 				if (i < nnodes - 1) {
 					neigh = r.nextInt(nnodes - 1 - i); // TODO: this may be called with a 0 if we are in the last node
-					System.out.println("Creating neighbor point 2  - Between nodes" + i + "-" + (i + 1 + neigh));
+					log.debug("Creating neighbor point 2  - Between nodes {}-{}", i , (i + 1 + neigh));
 					addNeighbor(i + 1 + neigh, i);
 				}
 			}
@@ -95,22 +102,33 @@ public class Network {
 				addNeighbor(searchIthNodeNotNeighborYet(neigh, i, nnodes), i);
 
 			}
+			log.trace("Neigbors created for node {}", i);
 		}
 
 	}
 
 	private int searchIthNodeNotNeighborYet(int ithNotNeighbor, int nodeIndex, int nnodes) {
 		int count = -1; // TODO: Check if this is 0 or -1
+		int loopsWithoutFindingCandidate=0;
+		boolean allAreNeighbors=false;
 		int indexSearched = -1;
-		while (count < ithNotNeighbor) {
+		while (count < ithNotNeighbor && (!allAreNeighbors)) {
 			indexSearched = (indexSearched + 1) % nnodes;
 			if (!isAlreadyNeighbor(indexSearched, nodeIndex)) {
 				count++;
+				loopsWithoutFindingCandidate=0;
+			}
+			else {
+				loopsWithoutFindingCandidate++;
+				if(loopsWithoutFindingCandidate==nnodes) {
+					allAreNeighbors=true;
+					log.warn("All are neigbors of node {}", nodeIndex);
+				}
 			}
 
 		}
-		System.out.println("Creating neighbor point  3 - Between nodes" + nodeIndex + "-" + indexSearched);
-		return indexSearched;
+		log.debug("Creating neighbor point  3 - Between nodes {}-{}", nodeIndex, indexSearched);
+				return indexSearched;
 	}
 
 	private boolean allPreviousAreNeighbors(int i) {
@@ -348,6 +366,14 @@ public class Network {
 			}
 		}
 		return maxPosition;
+	}
+
+	public int countAllNeighbors() {
+		int sum=0;
+		for(int i=0; i<neighbors.length; i++) {
+			sum+=neighbors[i].size();
+		}
+		return sum/2;
 	}
 
 }
