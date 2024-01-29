@@ -376,4 +376,8 @@ public class Network {
 		return sum/2;
 	}
 
+	public int getNumberOfNodes() {
+		return neighbors.length;
+	}
+
 }

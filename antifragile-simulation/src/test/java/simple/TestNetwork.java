@@ -2,6 +2,7 @@ package simple;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Scanner;
@@ -72,10 +73,10 @@ class TestNetwork {
 		(new Scanner(System.in)).nextLine();
 
 	}
-	
+
 	@Test
 	void test10IterationsSameSystemSimulate10NodesTime10000PlotEnd() throws IOException {
-		
+
 		Simulator s = new Simulator(false); // Plotting
 		l.createSystem(10, 4, 1.5, 0.01, 10.0, "file");
 		for (int i = 0; i < 10; i++) {
@@ -86,5 +87,54 @@ class TestNetwork {
 
 		(new Scanner(System.in)).nextLine();
 
+	}
+
+	@Test
+	void testConvergence10IterationsSameSystem100NodesTime10000PlotEnd() throws IOException {
+
+		double[][] results = new double[10][];
+		Simulator s = new Simulator(false); // Plotting
+		l.createSystem(100, 10, 20, 0.005, 2.5, "file");
+		for (int i = 0; i < 10; i++) {
+			results[i] = s.simulate(l, 10000);
+			System.out.println(Arrays.toString(results[i]));
+			Plotter.PlotResults(results[i]);
+			convertToAverageUpToT(results[i]);
+
+			
+		}
+		saveMatrixFile(results, "convergence10itartionsSameSystem100Nodes10000Steps.csv", ";");
+		(new Scanner(System.in)).nextLine();
+
+	}
+
+	private void convertToAverageUpToT(double[] ds) {
+		double average = 0.0;
+		for (int i = 0; i < ds.length; i++) {
+			
+			average = (average * ((double) i) + ds[i]) / ((double) (i + 1.0));
+			ds[i]=average;
+		}
+		
+	}
+
+	private void saveMatrixFile(double[][] m, String filename, String separator) {
+		try {
+		      FileWriter wr = new FileWriter(filename);
+		      
+		
+		for(int numSim =0 ; numSim<m.length; numSim++) {
+			for(int timestamp=0; timestamp<m[numSim].length; timestamp++) {
+				wr.write(""+m[numSim][timestamp]+";");
+				
+			}
+			wr.write(System.getProperty("line.separator"));
+		}
+		wr.close();
+	    } catch (IOException e) {
+	        System.out.println("An error occurred.");
+	        e.printStackTrace();
+	      }
+		
 	}
 }
