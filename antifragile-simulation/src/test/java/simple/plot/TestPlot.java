@@ -1,6 +1,5 @@
 package simple.plot;
 
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Scanner;
 
@@ -24,6 +23,7 @@ class TestPlot {
 			      chart.setVisible( true );
 			      Scanner scanner = new Scanner(System.in); 
 			      scanner.nextLine();
+			      scanner.close();
 			   
 	}
 

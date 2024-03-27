@@ -1,6 +1,5 @@
 package simple.learning;
 
-import static org.junit.jupiter.api.Assertions.*;
 
 import org.apache.commons.math3.stat.inference.TTest;
 import org.junit.jupiter.api.BeforeEach;
