@@ -50,6 +50,12 @@ public class Network {
 		infectedAtCurrentTime = new boolean[isInfected.length];
 
 	}
+	
+
+	
+	public void setSeed(long seed) {
+		r.setSeed(seed);
+	}
 
 	private void fillInfected(int nnodes) {
 		for (int i = 0; i < nnodes; i++) {
@@ -161,7 +167,7 @@ public class Network {
 
 	private void fillType(int nnodes, int differents) {
 		for (int i = 0; i < nnodes; i++) {
-			type[i] = (int) Math.floor(Math.random() * differents);
+			type[i] = (int) Math.floor(r.nextDouble() * differents);
 
 		}
 
@@ -378,6 +384,26 @@ public class Network {
 
 	public int getNumberOfNodes() {
 		return neighbors.length;
+	}
+
+	
+	
+	/* Private constructor used in the clone*/
+	private Network(ArrayList<Integer>[] neighbors, int[] type, boolean[] isInfected, double meanHealingT,
+			VulnerabilityExploit[] exploits, Random r, boolean[] infectedAtCurrentTime) {
+		super();
+		this.neighbors = neighbors;
+		this.type = type;
+		this.isInfected = isInfected;
+		this.meanHealingT = meanHealingT;
+		this.exploits = exploits;
+		this.r = r;
+		this.infectedAtCurrentTime = infectedAtCurrentTime;
+	}
+
+
+	public Network cloneNetwork() {
+		return new Network(neighbors, type, isInfected, meanHealingT, exploits, r, infectedAtCurrentTime);
 	}
 
 }

@@ -34,6 +34,8 @@ public class Plotter extends ApplicationFrame {
 		// Check chartPanel.setChart later.
 		chartPanel.setPreferredSize(new java.awt.Dimension(560, 367));
 		setContentPane(chartPanel);
+		
+
 
 	}
 
