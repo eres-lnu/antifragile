@@ -386,7 +386,10 @@ public class Network {
 		return neighbors.length;
 	}
 
-	
+	/* Default constructor*/
+	public Network() {
+		super();
+	}
 	
 	/* Private constructor used in the clone*/
 	private Network(ArrayList<Integer>[] neighbors, int[] type, boolean[] isInfected, double meanHealingT,
