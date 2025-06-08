@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Scanner;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -27,6 +28,15 @@ class TestNetwork {
 
 		l.createSystem(10, 4, 1.5, 0.01, 10.0, "file");
 		System.out.println(l.toString());
+	}
+	
+	@Test
+	void testClone() {
+		l.createSystem(10, 4, 1.5, 0.01, 10.0, "file");
+		Network cloned = l.cloneNetwork();
+		Assertions.assertTrue(cloned.equals(l));
+		cloned.getNeighbors(0).set(0,cloned.getNeighbors(0).get(0)+1);
+		Assertions.assertFalse(cloned.equals(l));
 	}
 
 	@Test
