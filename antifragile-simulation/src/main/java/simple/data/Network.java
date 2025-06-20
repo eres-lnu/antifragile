@@ -1,6 +1,8 @@
 package simple.data;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.Random;
 
 import org.apache.logging.log4j.LogManager;
@@ -406,7 +408,41 @@ public class Network {
 
 
 	public Network cloneNetwork() {
-		return new Network(neighbors, type, isInfected, meanHealingT, exploits, r, infectedAtCurrentTime);
+		//The neighbors need deep opy
+		ArrayList<Integer>[] clonedNeighbors = new  ArrayList[neighbors.length];
+		for(int i=0; i< neighbors.length; i++) {
+			clonedNeighbors[i] = (ArrayList<Integer>) neighbors[i].clone();
+		}
+		return new Network(clonedNeighbors, 
+				Arrays.copyOf(type, type.length), 
+				Arrays.copyOf(isInfected, isInfected.length), 
+				meanHealingT, 
+				Arrays.copyOf(exploits, exploits.length), 
+				r, 
+				Arrays.copyOf(infectedAtCurrentTime, infectedAtCurrentTime.length));
+		
 	}
+
+
+
+
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Network other = (Network) obj;
+		return Arrays.equals(exploits, other.exploits)
+				&& Arrays.equals(infectedAtCurrentTime, other.infectedAtCurrentTime)
+				&& Arrays.equals(isInfected, other.isInfected)
+				&& Double.doubleToLongBits(meanHealingT) == Double.doubleToLongBits(other.meanHealingT)
+				&& Arrays.equals(neighbors, other.neighbors) && Objects.equals(r, other.r)
+				&& Arrays.equals(type, other.type);
+	}
+	
 
 }
