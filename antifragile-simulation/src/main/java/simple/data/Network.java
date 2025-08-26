@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Random;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,10 +23,12 @@ public class Network {
 
 	private VulnerabilityExploit[] exploits;
 
+	private ArrayList<Pair<Integer, Integer>> removedLinks;
+
 	private Random r = new Random();
 
-	 protected static final Logger log = LogManager.getLogger(Network.class);
-	
+	protected static final Logger log = LogManager.getLogger(Network.class);
+
 //Creates a single vulnerability for each type of sofware
 	/**
 	 * @param nnodes        number of nodes
@@ -33,7 +36,7 @@ public class Network {
 	 * @param avgNeighbors  average number of neighbors of each node
 	 * @param avgProbAttack average probability of attack at a given time
 	 * @param meanHealT     average healing time
-	 * @param filename
+	 * @param filename		--Not used
 	 */
 	@SuppressWarnings("unchecked")
 	public void createSystem(int nnodes, int nsoftware, double avgNeighbors, double avgProbAttack, double meanHealT,
@@ -50,15 +53,18 @@ public class Network {
 		fillNeighbor(nnodes, avgNeighbors);
 		fillInfected(nnodes);
 		infectedAtCurrentTime = new boolean[isInfected.length];
+		removedLinks = new ArrayList<Pair<Integer, Integer>>();
 
 	}
-	
 
-	
-	public void setSeed(long seed) {
-		r.setSeed(seed);
+	public void setSeed (Long seed) {
+	    if (seed != null) {
+	        r.setSeed(seed);
+	    } else {
+	        r = new Random();
+	    }
 	}
-
+	
 	private void fillInfected(int nnodes) {
 		for (int i = 0; i < nnodes; i++) {
 			isInfected[i] = false;
@@ -93,13 +99,14 @@ public class Network {
 					}
 
 				}
-				log.debug("Creating neighbor point 1 - Between nodes {}-{}", i , indexSearchNodes);
-				//System.out.println("Creating neighbor point 1 - Between nodes" + i + "-" + indexSearchNodes);
+				log.debug("Creating neighbor point 1 - Between nodes {}-{}", i, indexSearchNodes);
+				// System.out.println("Creating neighbor point 1 - Between nodes" + i + "-" +
+				// indexSearchNodes);
 				addNeighbor(indexSearchNodes, i);
 			} else {// create the first neighbor between i and nnodes
 				if (i < nnodes - 1) {
 					neigh = r.nextInt(nnodes - 1 - i); // TODO: this may be called with a 0 if we are in the last node
-					log.debug("Creating neighbor point 2  - Between nodes {}-{}", i , (i + 1 + neigh));
+					log.debug("Creating neighbor point 2  - Between nodes {}-{}", i, (i + 1 + neigh));
 					addNeighbor(i + 1 + neigh, i);
 				}
 			}
@@ -117,26 +124,25 @@ public class Network {
 
 	private int searchIthNodeNotNeighborYet(int ithNotNeighbor, int nodeIndex, int nnodes) {
 		int count = -1; // TODO: Check if this is 0 or -1
-		int loopsWithoutFindingCandidate=0;
-		boolean allAreNeighbors=false;
+		int loopsWithoutFindingCandidate = 0;
+		boolean allAreNeighbors = false;
 		int indexSearched = -1;
 		while (count < ithNotNeighbor && (!allAreNeighbors)) {
 			indexSearched = (indexSearched + 1) % nnodes;
 			if (!isAlreadyNeighbor(indexSearched, nodeIndex)) {
 				count++;
-				loopsWithoutFindingCandidate=0;
-			}
-			else {
+				loopsWithoutFindingCandidate = 0;
+			} else {
 				loopsWithoutFindingCandidate++;
-				if(loopsWithoutFindingCandidate==nnodes) {
-					allAreNeighbors=true;
+				if (loopsWithoutFindingCandidate == nnodes) {
+					allAreNeighbors = true;
 					log.warn("All are neigbors of node {}", nodeIndex);
 				}
 			}
 
 		}
 		log.debug("Creating neighbor point  3 - Between nodes {}-{}", nodeIndex, indexSearched);
-				return indexSearched;
+		return indexSearched;
 	}
 
 	private boolean allPreviousAreNeighbors(int i) {
@@ -155,16 +161,52 @@ public class Network {
 		return neighbors[node].contains(neigh);
 	}
 
-	public void addNeighbor(int j, int i) {
+	private void addNeighbor(int j, int i) {
 		neighbors[j].add(i);
 		neighbors[i].add(j);
 
 	}
 
-	public void removeNeighbor(int j, int i) {
-		neighbors[j].remove(neighbors[j].indexOf(i));
-		neighbors[i].remove(neighbors[i].indexOf(j));
+	public boolean removeNeighbor(int j, int i) {
+		if (isAlreadyNeighbor(j, i) && i!=j) {
+			neighbors[j].remove(neighbors[j].indexOf(i));
+			neighbors[i].remove(neighbors[i].indexOf(j));
 
+			removedLinks.add(Pair.of(i, j));
+			return true;
+		} else {
+			log.warn("Trying to remove a link that did not exist; between nodes <{},{}>", j, i);
+		}
+		return false;
+
+	}
+
+	public boolean restoreNeighbor(int j, int i) {
+		if (removedLinks.contains(Pair.of(j, i)) || removedLinks.contains(Pair.of(i, j))) {
+			
+			/*
+			 * Remove from the list of removedLinks, either one order or the other will
+			 * exist
+			 */
+			boolean present = removedLinks.remove(Pair.of(j, i));
+			if (!present) {
+				removedLinks.remove(Pair.of(i, j));
+			}
+
+			if (present) {
+				addNeighbor(j, i);
+				return true;
+			} 
+			else{
+				log.error("Neighbore not present in the list of removed!!");
+				return false;
+			}
+			
+
+		} else {
+			log.warn("Trying to restore a link that had not been deleted; between nodes <{},{}>", j, i);
+			return false;
+		}
 	}
 
 	private void fillType(int nnodes, int differents) {
@@ -297,7 +339,6 @@ public class Network {
 		}
 		return maxNeighborsIndex;
 	}
-	
 
 	public int numberOfNeighbors(int node) {
 		return neighbors[node].size();
@@ -317,7 +358,6 @@ public class Network {
 
 		// depth-first-search marking visited nodes
 		dfs(0, visited);
-
 
 		for (int i = 0; i < visited.length; i++) {
 			if (!visited[i]) {
@@ -344,58 +384,58 @@ public class Network {
 
 	public int[] getNodesSortedByNeighborNumber() {
 		int[] nodes = new int[neighbors.length];
-		for(int i=0; i< nodes.length ; i++) {
-			nodes[i]=i;
+		for (int i = 0; i < nodes.length; i++) {
+			nodes[i] = i;
 		}
 		sortByNeighbors(nodes);
 		return nodes;
 	}
 
 	private void sortByNeighbors(int[] nodes) {
-		//Simple quadratic sorting
-		for(int i=0; i<nodes.length; i++) {	
-				int auxPosition = getMaxPosition(nodes, i); //get the position with maximum value starting in j position
-				int auxValue = nodes[auxPosition];
-				nodes[auxPosition]=nodes[i];
-				nodes[i]=auxValue;
-				
-			
+		// Simple quadratic sorting
+		for (int i = 0; i < nodes.length; i++) {
+			int auxPosition = getMaxPosition(nodes, i); // get the position with maximum value starting in j position
+			int auxValue = nodes[auxPosition];
+			nodes[auxPosition] = nodes[i];
+			nodes[i] = auxValue;
+
 		}
-		
+
 	}
 
 	private int getMaxPosition(int[] nodes, int i) {
-		int maxValue=0;
-		int maxPosition=0;
-		for(int j=i; j<nodes.length; j++) {
-			if(numberOfNeighbors(nodes[j])>maxValue) {
-				maxValue=numberOfNeighbors(nodes[j]);
-				maxPosition=j;
+		int maxValue = 0;
+		int maxPosition = 0;
+		for (int j = i; j < nodes.length; j++) {
+			if (numberOfNeighbors(nodes[j]) > maxValue) {
+				maxValue = numberOfNeighbors(nodes[j]);
+				maxPosition = j;
 			}
 		}
 		return maxPosition;
 	}
 
 	public int countAllNeighbors() {
-		int sum=0;
-		for(int i=0; i<neighbors.length; i++) {
-			sum+=neighbors[i].size();
+		int sum = 0;
+		for (int i = 0; i < neighbors.length; i++) {
+			sum += neighbors[i].size();
 		}
-		return sum/2;
+		return sum / 2;
 	}
 
 	public int getNumberOfNodes() {
 		return neighbors.length;
 	}
 
-	/* Default constructor*/
+	/* Default constructor */
 	public Network() {
 		super();
 	}
-	
-	/* Private constructor used in the clone*/
+
+	/* Private constructor used in the clone */
 	private Network(ArrayList<Integer>[] neighbors, int[] type, boolean[] isInfected, double meanHealingT,
-			VulnerabilityExploit[] exploits, Random r, boolean[] infectedAtCurrentTime) {
+			VulnerabilityExploit[] exploits, Random r, boolean[] infectedAtCurrentTime,
+			ArrayList<Pair<Integer, Integer>> removedLinks) {
 		super();
 		this.neighbors = neighbors;
 		this.type = type;
@@ -404,28 +444,26 @@ public class Network {
 		this.exploits = exploits;
 		this.r = r;
 		this.infectedAtCurrentTime = infectedAtCurrentTime;
+		this.removedLinks = removedLinks;
 	}
-
 
 	public Network cloneNetwork() {
-		//The neighbors need deep opy
-		ArrayList<Integer>[] clonedNeighbors = new  ArrayList[neighbors.length];
-		for(int i=0; i< neighbors.length; i++) {
+		// The neighbors need deep opy
+		ArrayList<Integer>[] clonedNeighbors = new ArrayList[neighbors.length];
+		for (int i = 0; i < neighbors.length; i++) {
 			clonedNeighbors[i] = (ArrayList<Integer>) neighbors[i].clone();
 		}
-		return new Network(clonedNeighbors, 
-				Arrays.copyOf(type, type.length), 
-				Arrays.copyOf(isInfected, isInfected.length), 
-				meanHealingT, 
-				Arrays.copyOf(exploits, exploits.length), 
-				r, 
-				Arrays.copyOf(infectedAtCurrentTime, infectedAtCurrentTime.length));
-		
+
+		ArrayList<Pair<Integer, Integer>> clonedRemovedLinks = new ArrayList<Pair<Integer, Integer>>();
+		for (Pair<Integer, Integer> p : removedLinks) {
+			clonedRemovedLinks.add(Pair.of(p));
+		}
+
+		return new Network(clonedNeighbors, Arrays.copyOf(type, type.length),
+				Arrays.copyOf(isInfected, isInfected.length), meanHealingT, Arrays.copyOf(exploits, exploits.length), r,
+				Arrays.copyOf(infectedAtCurrentTime, infectedAtCurrentTime.length), clonedRemovedLinks);
+
 	}
-
-
-
-
 
 	@Override
 	public boolean equals(Object obj) {
@@ -443,6 +481,5 @@ public class Network {
 				&& Arrays.equals(neighbors, other.neighbors) && Objects.equals(r, other.r)
 				&& Arrays.equals(type, other.type);
 	}
-	
 
 }

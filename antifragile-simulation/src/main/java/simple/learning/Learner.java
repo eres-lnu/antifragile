@@ -145,7 +145,7 @@ public class Learner {
 					if (n.isConnected()) {
 						learnProportionHealthy(n);
 					} else {
-						n.addNeighbor(nodeToPrune, neighborToCheck);
+						n.restoreNeighbor(nodeToPrune, neighborToCheck);
 					}
 
 				}
