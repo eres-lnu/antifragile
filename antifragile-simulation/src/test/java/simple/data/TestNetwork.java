@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import simple.data.Network;
+import simple.exceptions.ExploitNotFoundException;
 import simple.plot.Plotter;
 import simple.simulation.Simulator;
 
@@ -35,12 +36,21 @@ class TestNetwork {
 	}
 
 	@Test
-	void testClone() {
+	void testClone() throws ExploitNotFoundException {
 		l.createSystem(10, 4, 1.5, 0.01, 10.0, "file");
 		Network cloned = l.cloneNetwork();
 		Assertions.assertTrue(cloned.equals(l));
 		cloned.getNeighbors(0).set(0, cloned.getNeighbors(0).get(0) + 1);
 		Assertions.assertFalse(cloned.equals(l));
+		
+		//Change the value of exploit ID 2 by incrementing in 0.5.
+		Assertions.assertEquals(l.getExploitOutbreakProbability(2),cloned.getExploitOutbreakProbability(2));
+		log.debug("Pre-chnage: attack prob for exploit 2 in network and cloned is {}-{}",l.getExploitOutbreakProbability(2),cloned.getExploitOutbreakProbability(2) );
+
+		l.setExploitOutbreakProbability(2, l.getExploitOutbreakProbability(2)+0.5);
+		Assertions.assertNotEquals(l.getExploitOutbreakProbability(2), cloned.getExploitOutbreakProbability(2));
+		log.debug("Post-chnage: attack prob for exploit 2 in network and cloned is {}-{}",l.getExploitOutbreakProbability(2),cloned.getExploitOutbreakProbability(2) );
+		Assertions.assertThrowsExactly(ExploitNotFoundException.class, () -> l.getExploitOutbreakProbability(999999));
 	}
 
 	@Test

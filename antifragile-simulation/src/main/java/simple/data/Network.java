@@ -5,9 +5,12 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Random;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import simple.exceptions.ExploitNotFoundException;
 
 /**
  * 
@@ -459,12 +462,52 @@ public class Network {
 			clonedRemovedLinks.add(Pair.of(p));
 		}
 
+		
 		return new Network(clonedNeighbors, Arrays.copyOf(type, type.length),
-				Arrays.copyOf(isInfected, isInfected.length), meanHealingT, Arrays.copyOf(exploits, exploits.length), r,
-				Arrays.copyOf(infectedAtCurrentTime, infectedAtCurrentTime.length), clonedRemovedLinks);
+				SerializationUtils.clone(isInfected), meanHealingT, SerializationUtils.clone(exploits), r,
+				SerializationUtils.clone(infectedAtCurrentTime), clonedRemovedLinks);
 
 	}
+	
+	public void setExploitOutbreakProbability(int exploitId, double prob) throws ExploitNotFoundException {
+		//Hopefully they are in order
+		if(exploitId<exploits.length && exploits[exploitId].getId()==exploitId) {
+			//It's in its place
+			exploits[exploitId].setProbAttack(prob);
+			return;
+		}
+		else { //Not in order, search
+			for(int i=0; i<exploits.length; i++) {
+				if(exploits[i].getId()==exploitId) {
+					exploits[i].setProbAttack(prob);
+					return;
+				}
+			}
+		}
+		
+		throw new ExploitNotFoundException();
+	}
+	
+	public double getExploitOutbreakProbability(int exploitId)  throws ExploitNotFoundException {
+		//Hopefully they are in order
+				if(exploitId<exploits.length && exploits[exploitId].getId()==exploitId) {
+					//It's in its place
+					return exploits[exploitId].getProbAttack();
+				}
+				
+				else { //Not in order, search
+					for(int i=0; i<exploits.length; i++) {
+						if(exploits[i].getId()==exploitId) {
+							return exploits[i].getProbAttack();
 
+						}
+					}
+				}
+				throw new ExploitNotFoundException();
+	}
+
+	
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -481,5 +524,6 @@ public class Network {
 				&& Arrays.equals(neighbors, other.neighbors) && Objects.equals(r, other.r)
 				&& Arrays.equals(type, other.type);
 	}
+	
 
 }
